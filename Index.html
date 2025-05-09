@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mega Criativa - Registro de Horas</title>
+    <!-- Importação de fontes -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Importação de bibliotecas necessárias -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+    <style>
+        /* Estilos globais e variáveis */
+        :root {
+            --primary-color: rgb(50, 142, 110);
+            --secondary-color: rgb(103, 174, 110);
+            --bg-color: rgb(225, 238, 188);
+            --text-color: #333;
+            --light-gray: #f5f5f5;
+            --dark-gray: #666;
+            --error-color: #e74c3c;
+            --success-color: #2ecc71;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 16px;
+        }
+
+        /* Container do formulário */
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+        }
+
+        /* Cabeçalho */
+        .form-header {
+            text-align: center;
+            margin-bottom: 24px;
+            color: var(--primary-color);
+        }
+
+        .form-header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .form-header h2 {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        /* Grupos de campos */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark-gray);
+        }
+
+        .required::after {
+            content: " *";
+            color: var(--error-color);
+        }
+
+        /* Estilos de campos */
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: border 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Estilo para campo de localização */
+        .location-container {
+            margin-top: 8px;
+        }
+
+        .location-display {
+            background-color: var(--light-gray);
+            padding: 12px;
+            border-radius: var(--border-radius);
+            margin-top: 8px;
+            word-break: break-all;
+            font-size: 14px;
+        }
+
+        /* Botões */
+        .btn {
+            display: inline-block;
+            padding: 12px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn:disabled {
+            background-color: var(--dark-gray);
+            cursor: not-allowed;
+        }
+
+        .btn-location {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            margin-top: 12px;
+            padding: 14px;
+            font-size: 18px;
+        }
+
+        /* Mensagens de feedback */
+        .error-message {
+            color: var(--error-color);
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .feedback-container {
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: var(--border-radius);
+            display: none;
+        }
+
+        .success-message {
+            background-color: rgba(46, 204, 113, 0.1);
+            color: var(--success-color);
+        }
+
+        .error-alert {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--error-color);
+        }
+
+        /* Loader */
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+            vertical-align: middle;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsividade para telas muito pequenas */
+        @media (max-width: 360px) {
+            .form-container {
+                padding: 16px;
+            }
+
+            input, select, textarea {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <!-- Cabeçalho do formulário -->
+        <div class="form-header">
+            <h1>Mega Criativa</h1>
+            <h2>Registro de Horas</h2>
+        </div>
+
+        <!-- Formulário principal -->
+        <form id="hoursRegistrationForm">
+            <!-- Nome -->
+            <div class="form-group">
+                <label for="nome" class="required">Nome</label>
+                <input type="text" id="nome" name="nome" required>
+                <div class="error-message" id="nome-error">Por favor, informe seu nome.</div>
+            </div>
+
+            <!-- Equipe -->
+            <div class="form-group">
+                <label for="equipe" class="required">Equipe</label>
+                <select id="equipe" name="equipe" required>
+                    <option value="">Selecione uma equipe</option>
+                    <option value="Verde">Verde</option>
+                    <option value="Azul">Azul</option>
+                    <option value="Amarela">Amarela</option>
+                    <option value="Vermelha">Vermelha</option>
+                    <option value="Preta">Preta</option>
+                    <option value="Dourada">Dourada</option>
+                    <option value="Roxa">Roxa</option>
+                    <option value="Extra">Extra</option>
+                </select>
+                <div class="error-message" id="equipe-error">Por favor, selecione uma equipe.</div>
+            </div>
+
+            <!-- Cidade -->
+            <div class="form-group">
+                <label for="cidade" class="required">Cidade</label>
+                <select id="cidade" name="cidade" required>
+                    <option value="">Selecione uma cidade</option>
+                    <!-- Lista de cidades será carregada dinamicamente -->
+                </select>
+                <div class="error-message" id="cidade-error">Por favor, selecione uma cidade.</div>
+            </div>
+
+            <!-- Nome do Serviço -->
+            <div class="form-group">
+                <label for="nomeServico" class="required">Nome do Serviço</label>
+                <input type="text" id="nomeServico" name="nomeServico" maxlength="100" required>
+                <div class="error-message" id="nomeServico-error">Por favor, informe o nome do serviço.</div>
+            </div>
+
+            <!-- Localização -->
+            <div class="form-group">
+                <label for="localizacao" class="required">Localização</label>
+                <button type="button" id="getLocationBtn" class="btn btn-location">
+                    Obter Localização
+                    <span class="loader" id="location-loader"></span>
+                </button>
+                <div class="location-container">
+                    <input type="hidden" id="latitude" name="latitude">
+                    <input type="hidden" id="longitude" name="longitude">
+                    <div class="location-display" id="locationDisplay">
+                        Aguardando captura de localização...
+                    </div>
+                </div>
+                <div class="error-message" id="location-error">Por favor, capture sua localização.</div>
+            </div>
+
+            <!-- Data do Registro -->
+            <div class="form-group">
+                <label for="dataRegistro" class="required">Data do Registro</label>
+                <input type="date" id="dataRegistro" name="dataRegistro" required>
+                <div class="error-message" id="dataRegistro-error">Por favor, informe a data do registro.</div>
+            </div>
+
+            <!-- Hora Especial -->
+            <div class="form-group">
+                <label for="horaEspecial" class="required">Hora Especial</label>
+                <select id="horaEspecial" name="horaEspecial" required>
+                    <option value="">Selecione uma opção</option>
+                    <option value="Sim">Sim</option>
+                    <option value="Não">Não</option>
+                </select>
+                <div class="error-message" id="horaEspecial-error">Por favor, selecione uma opção.</div>
+            </div>
+
+            <!-- Quantidade de Horas -->
+            <div class="form-group">
+                <label for="quantidadeHoras" class="required">Quantidade de Horas</label>
+                <input type="number" id="quantidadeHoras" name="quantidadeHoras" min="0" step="0.5" required>
+                <div class="error-message" id="quantidadeHoras-error">Por favor, informe a quantidade de horas.</div>
+            </div>
+
+            <!-- Observações -->
+            <div class="form-group">
+                <label for="observacoes. Ex:  Cheguei às 7 horas da manhã, almoço só de 1 hora e fiquei até às 22 horas." class="required">Observações. Ex:  Cheguei às 7 horas da manhã, almoço só de 1 hora e fiquei até às 22 horas.</label>
+                <textarea id="observacoes" name="observacoes" maxlength="300" required></textarea>
+                <div class="error-message" id="observacoes-error">Por favor, adicione uma observação.</div>
+            </div>
+
+            <!-- Campos ocultos -->
+            <input type="hidden" id="registroId" name="registroId">
+            <input type="hidden" id="timestampSubmissao" name="timestampSubmissao">
+            <input type="hidden" id="mapsLink" name="mapsLink">
+
+            <!-- Botão de submissão -->
+            <button type="submit" id="submitBtn" class="btn btn-submit">
+                Enviar Registro
+                <span class="loader" id="submit-loader"></span>
+            </button>
+        </form>
+
+        <!-- Container de feedback -->
+        <div class="feedback-container" id="feedback-container"></div>
+    </div>
+
+    <script>
+    // Inicialização do documento quando estiver pronto
+document.addEventListener('DOMContentLoaded', function() {
+    // Lista de cidades para o select
+    const cidades = [
+        'Açailândia', 'Afonso Cunha', 'Água Doce do Maranhão', 'Alcântara', 'Aldeias Altas', 'Altamira do Maranhão',
+        'Alto Alegre do Maranhão', 'Alto Alegre do Pindaré', 'Alto Parnaíba', 'Amapá do Maranhão', 'Amarante do Maranhão',
+        'Anajatuba', 'Anapurus', 'Apicum-Açu', 'Araguanã', 'Araioses', 'Arame', 'Arari', 'Axixá', 'Bacabal', 'Bacabeira',
+        'Bacuri', 'Bacurituba', 'Balsas', 'Barão de Grajaú', 'Barra do Corda', 'Barreirinhas', 'Bela Vista do Maranhão',
+        'Belágua', 'Benedito Leite', 'Bequimão', 'Bernardo do Mearim', 'Boa Vista do Gurupi', 'Bom Jardim', 'Bom Jesus das Selvas',
+        'Bom Lugar', 'Brejo', 'Brejo de Areia', 'Buriti', 'Buriti Bravo', 'Buriticupu', 'Buritirana', 'Cachoeira Grande',
+        'Cajapió', 'Cajari', 'Campestre do Maranhão', 'Cândido Mendes', 'Cantanhede', 'Capinzal do Norte', 'Carolina',
+        'Carutapera', 'Caxias', 'Cedral', 'Central do Maranhão', 'Centro do Guilherme', 'Centro Novo do Maranhão', 'Chapadinha',
+        'Cidelândia', 'Codó', 'Coelho Neto', 'Colinas', 'Conceição do Lago Açu', 'Coroatá', 'Cururupu', 'Davinópolis',
+        'Dom Pedro', 'Duque Bacelar', 'Esperantinópolis', 'Estreito', 'Feira Nova do Maranhão', 'Fernando Falcão',
+        'Formosa da Serra Negra', 'Fortaleza dos Nogueiras', 'Fortuna', 'Godofredo Viana', 'Gonçalves Dias', 'Governador Archer',
+        'Governador Edison Lobão', 'Governador Eugênio Barros', 'Governador Luiz Rocha', 'Governador Newton Bello',
+        'Governador Nunes Freire', 'Graça Aranha', 'Grajaú', 'Guimarães', 'Humberto de Campos', 'Icatu', 'Igarapé do Meio',
+        'Igarapé Grande', 'Imperatriz', 'Itaipava do Grajaú', 'Itapecuru-Mirim', 'Itinga do Maranhão', 'Jatobá', 'Jenipapo dos Vieiras',
+        'João Lisboa', 'Joselândia', 'Junco do Maranhão', 'Lago da Pedra', 'Lago do Junco', 'Lago dos Rodrigues', 'Lago Verde',
+        'Lagoa do Mato', 'Lagoa Grande do Maranhão', 'Lajeado Novo', 'Lima Campos', 'Loreto', 'Luís Domingues',
+        'Magalhães de Almeida', 'Maracaçumé', 'Marajá do Sena', 'Maranhãozinho', 'Mata Roma', 'Matinha', 'Matões', 'Matões do Norte',
+        'Milagres do Maranhão', 'Mirador', 'Miranda do Norte', 'Mirinzal', 'Monção', 'Montes Altos', 'Morros', 'Nina Rodrigues',
+        'Nova Colinas', 'Nova Iorque', 'Nova Olinda do Maranhão', 'Olho Dagua das Cunhãs', 'Olinda Nova do Maranhão',
+        'Paço do Lumiar', 'Palmeirândia', 'Paraibano', 'Parnarama', 'Passagem Franca', 'Pastos Bons', 'Paulino Neves',
+        'Paulo Ramos', 'Pedreiras', 'Pedro do Rosário', 'Penalva', 'Peri Mirim', 'Peritoró', 'Pindaré-Mirim', 'Pinheiro',
+        'Pio XII', 'Pirapemas', 'Poção de Pedras', 'Porto Franco', 'Porto Rico do Maranhão', 'Presidente Dutra', 'Presidente Juscelino',
+        'Presidente Médici', 'Presidente Sarney', 'Presidente Vargas', 'Primeira Cruz', 'Raposa', 'Riachão', 'Ribamar Fiquene',
+        'Rosário', 'Sambaíba', 'Santa Filomena do Maranhão', 'Santa Helena', 'Santa Inês', 'Santa Luzia', 'Santa Luzia do Paruá',
+        'Santa Quitéria do Maranhão', 'Santa Rita', 'Santana do Maranhão', 'Santo Amaro do Maranhão', 'Santo Antônio dos Lopes',
+        'São Benedito do Rio Preto', 'São Bento', 'São Bernardo', 'São Domingos do Azeitão', 'São Domingos do Maranhão',
+        'São Félix de Balsas', 'São Francisco do Brejão', 'São Francisco do Maranhão', 'São João Batista', 'São João do Caru',
+        'São João do Paraíso', 'São João do Soter', 'São João dos Patos', 'São José de Ribamar', 'São José dos Basílios',
+        'São Luís', 'São Luís Gonzaga do Maranhão', 'São Mateus do Maranhão', 'São Pedro da Água Branca', 'São Pedro dos Crentes',
+        'São Raimundo das Mangabeiras', 'São Raimundo do Doca Bezerra', 'São Roberto', 'São Vicente Ferrer', 'Satubinha',
+        'Senador Alexandre Costa', 'Senador La Rocque', 'Serrano do Maranhão', 'Sítio Novo', 'Sucupira do Norte', 'Sucupira do Riachão',
+        'Tasso Fragoso', 'Timbiras', 'Timon', 'Trizidela do Vale', 'Tufilândia', 'Tuntum', 'Turiaçu', 'Turilândia', 'Tutóia',
+        'Urbano Santos', 'Vargem Grande', 'Viana', 'Vila Nova dos Martírios', 'Vitória do Mearim', 'Vitorino Freire', 'Zé Doca'
+    ]
+            // Preencher o select de cidades
+            const cidadeSelect = document.getElementById('cidade');
+            cidades.sort().forEach(cidade => {
+                const option = document.createElement('option');
+                option.value = cidade;
+                option.textContent = cidade;
+                cidadeSelect.appendChild(option);
+            });
+
+            // Definir data atual como valor padrão para o campo de data
+            const hoje = new Date();
+            const dataFormatada = hoje.toISOString().split('T')[0];
+            document.getElementById('dataRegistro').value = dataFormatada;
+
+            // Gerar ID de registro único
+            document.getElementById('registroId').value = generateUUID();
+
+            // Função para gerar UUID usando a biblioteca uuid
+            function generateUUID() {
+                return uuid.v4();
+            }
+
+            // Manipulador para obter localização
+            document.getElementById('getLocationBtn').addEventListener('click', getLocation);
+
+            // Manipulador para envio do formulário
+            document.getElementById('hoursRegistrationForm').addEventListener('submit', handleSubmit);
+
+            // Controle para proteção contra submissões duplicadas
+            let formSubmitted = false;
+        });
+
+        // Função para obter a localização do usuário
+        function getLocation() {
+            const locationLoader = document.getElementById('location-loader');
+            const locationDisplay = document.getElementById('locationDisplay');
+            const locationError = document.getElementById('location-error');
+            
+            // Mostrar indicador de carregamento
+            locationLoader.style.display = 'inline-block';
+            locationDisplay.textContent = 'Obtendo localização...';
+            
+            // Verificar se a geolocalização está disponível
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    // Sucesso
+                    function(position) {
+                        // Obter coordenadas
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        
+                        // Armazenar valores nos campos ocultos
+                        document.getElementById('latitude').value = latitude;
+                        document.getElementById('longitude').value = longitude;
+                        
+                        // Criar link do Google Maps
+                        const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                        document.getElementById('mapsLink').value = mapsLink;
+                        
+                        // Atualizar display de localização
+                        locationDisplay.innerHTML = `<a href="${mapsLink}" target="_blank">Localização capturada! Clique para ver no Google Maps</a>`;
+                        locationDisplay.style.color = 'var(--primary-color)';
+                        
+                        // Esconder erro se mostrado anteriormente
+                        locationError.style.display = 'none';
+                        
+                        // Esconder loader
+                        locationLoader.style.display = 'none';
+                    },
+                    // Erro
+                    function(error) {
+                        let errorMessage;
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = "Permissão de localização negada.";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = "Informação de localização indisponível.";
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = "Tempo esgotado para obter localização.";
+                                break;
+                            case error.UNKNOWN_ERROR:
+                                errorMessage = "Erro desconhecido ao obter localização.";
+                                break;
+                        }
+                        
+                        // Mostrar mensagem de erro
+                        locationDisplay.textContent = errorMessage;
+                        locationDisplay.style.color = 'var(--error-color)';
+                        locationError.style.display = 'block';
+                        locationError.textContent = "Falha ao obter localização. Tente novamente.";
+                        
+                        // Esconder loader
+                        locationLoader.style.display = 'none';
+                    },
+                    // Opções
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                // Navegador não suporta geolocalização
+                locationDisplay.textContent = "Geolocalização não é suportada pelo seu navegador.";
+                locationDisplay.style.color = 'var(--error-color)';
+                locationLoader.style.display = 'none';
+                locationError.style.display = 'block';
+                locationError.textContent = "Seu navegador não suporta geolocalização.";
+            }
+        }
+
+        // Função para manipular envio do formulário
+        function handleSubmit(event) {
+            event.preventDefault();
+            
+            // Verificar se o formulário já foi enviado
+            if (window.formSubmitted) {
+                showFeedback("Formulário já foi enviado. Por favor, aguarde.", "error");
+                return;
+            }
+            
+            // Validar todos os campos
+            if (!validateForm()) {
+                return;
+            }
+            
+            // Definir timestamp de submissão
+            const now = new Date();
+            document.getElementById('timestampSubmissao').value = now.toISOString();
+            
+            // Mostrar indicador de carregamento
+            const submitLoader = document.getElementById('submit-loader');
+            submitLoader.style.display = 'inline-block';
+            document.getElementById('submitBtn').disabled = true;
+            
+            // Sinalizar que o formulário foi enviado
+            window.formSubmitted = true;
+            
+            // Coletar dados do formulário
+            const formData = getFormData();
+            
+            // Enviar dados para o Google Sheets
+            sendToGoogleSheets(formData)
+                .then(response => {
+                    if (response.result === 'success') {
+                        // Gerar PDF se envio foi bem-sucedido
+                        generatePDF(formData);
+                        showFeedback("Registro enviado com sucesso! O PDF foi gerado.", "success");
+                    } else {
+                        throw new Error("Falha ao enviar para a planilha.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro:", error);
+                    showFeedback("Ocorreu um erro ao enviar os dados. Por favor, tente novamente.", "error");
+                    window.formSubmitted = false;
+                })
+                .finally(() => {
+                    // Esconder loader e reativar botão
+                    submitLoader.style.display = 'none';
+                    document.getElementById('submitBtn').disabled = false;
+                });
+        }
+
+        // Função para validar todos os campos do formulário
+        function validateForm() {
+            const fields = [
+                { id: 'nome', message: 'Por favor, informe seu nome.' },
+                { id: 'equipe', message: 'Por favor, selecione uma equipe.' },
+                { id: 'cidade', message: 'Por favor, selecione uma cidade.' },
+                { id: 'nomeServico', message: 'Por favor, informe o nome do serviço.' },
+                { id: 'dataRegistro', message: 'Por favor, informe a data do registro.' },
+                { id: 'horaEspecial', message: 'Por favor, selecione uma opção.' },
+                { id: 'quantidadeHoras', message: 'Por favor, informe a quantidade de horas.' },
+                { id: 'observacoes', message: 'Por favor, adicione uma observação.' }
+            ];
+            
+            let isValid = true;
+            
+            // Verificar cada campo
+            fields.forEach(field => {
+                const element = document.getElementById(field.id);
+                const errorElement = document.getElementById(`${field.id}-error`);
+                
+                if (!element.value.trim()) {
+                    errorElement.textContent = field.message;
+                    errorElement.style.display = 'block';
+                    isValid = false;
+                } else {
+                    errorElement.style.display = 'none';
+                }
+            });
+            
+            // Verificar localização
+            if (!document.getElementById('latitude').value || !document.getElementById('longitude').value) {
+                document.getElementById('location-error').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('location-error').style.display = 'none';
+            }
+            
+            return isValid;
+        }
+
+        // Função para coletar todos os dados do formulário
+        function getFormData() {
+            return {
+                registroId: document.getElementById('registroId').value,
+                timestampSubmissao: document.getElementById('timestampSubmissao').value,
+                nome: document.getElementById('nome').value,
+                equipe: document.getElementById('equipe').value,
+                cidade: document.getElementById('cidade').value,
+                nomeServico: document.getElementById('nomeServico').value,
+                latitude: document.getElementById('latitude').value,
+                longitude: document.getElementById('longitude').value,
+                mapsLink: document.getElementById('mapsLink').value,
+                dataRegistro: document.getElementById('dataRegistro').value,
+                horaEspecial: document.getElementById('horaEspecial').value,
+                quantidadeHoras: document.getElementById('quantidadeHoras').value,
+                observacoes: document.getElementById('observacoes').value
+            };
+        }
+
+        // Função para enviar dados para o Google Sheets
+        function sendToGoogleSheets(data) {
+            // URL do seu Google Apps Script Web App
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbx4anh-KoRIaKJBQEiCKY3gCOb-CnrTfeyxTuYh2EIaTq5BSgJD1O8f_bBVeuNk8Oa7/exec';
+            
+            // Criar objeto FormData para envio
+            const formData = new FormData();
+            
+            // Adicionar todos os campos ao formData
+            Object.keys(data).forEach(key => {
+                formData.append(key, data[key]);
+            });
+            
+            // Enviar solicitação fetch
+            return fetch(scriptURL, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .catch(error => {
+                console.error('Erro ao enviar dados:', error);
+                throw error;
+            });
+        }
+
+        // Função para gerar PDF com os dados do formulário
+        function generatePDF(data) {
+            // Importar a biblioteca jsPDF
+            const { jsPDF } = window.jspdf;
+            
+            // Criar novo documento PDF
+            const doc = new jsPDF();
+            
+            // Adicionar título
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(18);
+            doc.setTextColor(50, 142, 110);
+            doc.text("Mega Criativa - Registro de Horas", 105, 20, { align: "center" });
+            
+            // Adicionar linha divisória
+            doc.setDrawColor(103, 174, 110);
+            doc.setLineWidth(0.5);
+            doc.line(20, 25, 190, 25);
+            
+            // Configurar fonte para o conteúdo
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            
+            // Adicionar dados ao PDF
+            let y = 35;
+            
+            const addField = (label, value) => {
+                doc.setFont("helvetica", "bold");
+                doc.text(`${label}:`, 20, y);
+                doc.setFont("helvetica", "normal");
+                doc.text(value, 80, y);
+                y += 10;
+            };
+            
+            // Formatar data
+            const formatDate = (dateString) => {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('pt-BR');
+            };
+            
+            // Adicionar campos
+            addField("Nome", data.nome);
+            addField("Equipe", data.equipe);
+            addField("Cidade", data.cidade);
+            addField("Nome do Serviço", data.nomeServico);
+            addField("Data do Registro", formatDate(data.dataRegistro));
+            addField("Hora Especial", data.horaEspecial);
+            addField("Quantidade de Horas", data.quantidadeHoras);
+            
+            // Adicionar localização com quebra se necessário
+            doc.setFont("helvetica", "bold");
+            doc.text("Localização:", 20, y);
+            doc.setFont("helvetica", "normal");
+            
+            // Tratar textos longos para localização
+            const locationText = `${data.mapsLink}`;
+            const textWidth = doc.getStringUnitWidth(locationText) * 12 / doc.internal.scaleFactor;
+            
+            if (textWidth > 100) {
+                const splitLocation = doc.splitTextToSize(locationText, 110);
+                doc.text(splitLocation, 80, y);
+                y += splitLocation.length * 7;
+            } else {
+                doc.text(locationText, 80, y);
+                y += 10;
+            }
+            
+            // Adicionar observações com quebra de linha
+            doc.setFont("helvetica", "bold");
+            doc.text("Observações:", 20, y);
+            doc.setFont("helvetica", "normal");
+            
+            // Tratar textos longos para observações
+            const observationText = data.observacoes;
+            const splitObservation = doc.splitTextToSize(observationText, 150);
+            doc.text(splitObservation, 20, y + 10);
+            
+            y += splitObservation.length * 7 + 10;
+            
+            // Adicionar informações do sistema
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            addField("ID do Registro", data.registroId);
+            addField("Data e Hora de Submissão", new Date(data.timestampSubmissao).toLocaleString('pt-BR'));
+            
+            // Adicionar rodapé
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(10);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Mega Criativa - Recibo de Registro de Horas (Página ${i} de ${pageCount})`, 105, 285, { align: "center" });
+            }
+            
+            // Salvar o PDF
+            doc.save(`Registro_${data.nome}_${formatDate(data.dataRegistro)}.pdf`);
+        }
+
+        // Função para mostrar feedback ao usuário
+        function showFeedback(message, type) {
+            const feedbackContainer = document.getElementById('feedback-container');
+            feedbackContainer.textContent = message;
+            feedbackContainer.style.display = 'block';
+            
+            if (type === 'success') {
+                feedbackContainer.className = 'feedback-container success-message';
+            } else if (type === 'error') {
+                feedbackContainer.className = 'feedback-container error-alert';
+            }
+            
+            // Rolar para o feedback
+            feedbackContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
