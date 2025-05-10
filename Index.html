@@ -397,83 +397,83 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // Função para obter a localização do usuário
-        function getLocation() {
-            const locationLoader = document.getElementById('location-loader');
-            const locationDisplay = document.getElementById('locationDisplay');
-            const locationError = document.getElementById('location-error');
-            
-            // Mostrar indicador de carregamento
-            locationLoader.style.display = 'inline-block';
-            locationDisplay.textContent = 'Obtendo localização...';
-            
-            // Verificar se a geolocalização está disponível
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    // Sucesso
-                    function(position) {
-                        // Obter coordenadas
-                        const latitude = position.coords.latitude;
-                        const longitude = position.coords.longitude;
-                        
-                        // Armazenar valores nos campos ocultos
-                        document.getElementById('latitude').value = latitude;
-                        document.getElementById('longitude').value = longitude;
-                        
-                        // Criar link do Google Maps
-                        const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-                        document.getElementById('mapsLink').value = mapsLink;
-                        
-                        // Atualizar display de localização
-                        locationDisplay.innerHTML = `<a href="${mapsLink}" target="_blank">Localização capturada! Clique para ver no Google Maps</a>`;
-                        locationDisplay.style.color = 'var(--primary-color)';
-                        
-                        // Esconder erro se mostrado anteriormente
-                        locationError.style.display = 'none';
-                        
-                        // Esconder loader
-                        locationLoader.style.display = 'none';
-                    },
-                    // Erro
-                    function(error) {
-                        let errorMessage;
-                        switch(error.code) {
-                            case error.PERMISSION_DENIED:
-                                errorMessage = "Permissão de localização negada.";
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                errorMessage = "Informação de localização indisponível.";
-                                break;
-                            case error.TIMEOUT:
-                                errorMessage = "Tempo esgotado para obter localização.";
-                                break;
-                            case error.UNKNOWN_ERROR:
-                                errorMessage = "Erro desconhecido ao obter localização.";
-                                break;
-                        }
-                        
-                        // Mostrar mensagem de erro
-                        locationDisplay.textContent = errorMessage;
-                        locationDisplay.style.color = 'var(--error-color)';
-                        locationError.style.display = 'block';
-                        locationError.textContent = "Falha ao obter localização. Tente novamente.";
-                        
-                        // Esconder loader
-                        locationLoader.style.display = 'none';
-                    },
-                    // Opções
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
-                    }
-                );
-            } else {
-                // Navegador não suporta geolocalização
-                locationDisplay.textContent = "Geolocalização não é suportada pelo seu navegador.";
-                locationDisplay.style.color = 'var(--error-color)';
+    function getLocation() {
+    const locationLoader = document.getElementById('location-loader');
+    const locationDisplay = document.getElementById('locationDisplay');
+    const locationError = document.getElementById('location-error');
+    
+    // Mostrar indicador de carregamento
+    locationLoader.style.display = 'inline-block';
+    locationDisplay.textContent = 'Obtendo localização...';
+    
+    // Verificar se a geolocalização está disponível
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            // Sucesso
+            function(position) {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                
+                // Armazenar valores nos campos ocultos
+                document.getElementById('latitude').value = latitude;
+                document.getElementById('longitude').value = longitude;
+                
+                // Criar link do Google Maps
+                const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                document.getElementById('mapsLink').value = mapsLink;
+                
+                // Atualizar display de localização
+                locationDisplay.innerHTML = `<a href="${mapsLink}" target="_blank">Localização capturada! Clique para ver no Google Maps</a>`;
+                locationDisplay.style.color = 'var(--primary-color)';
+                
+                // Esconder erro se mostrado anteriormente
+                locationError.style.display = 'none';
+                
+                // Esconder loader
                 locationLoader.style.display = 'none';
+            },
+            // Erro
+            function(error) {
+                let errorMessage;
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage = "Permissão de localização negada. Verifique as permissões do seu navegador.";
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = "Informação de localização indisponível. Tente novamente mais tarde.";
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage = "Tempo esgotado para obter localização. Verifique sua conexão.";
+                        break;
+                    case error.UNKNOWN_ERROR:
+                    default:
+                        errorMessage = "Erro desconhecido ao obter localização. Tente novamente.";
+                        break;
+                }
+                
+                // Mostrar mensagem de erro
+                locationDisplay.textContent = errorMessage;
+                locationDisplay.style.color = 'var(--error-color)';
                 locationError.style.display = 'block';
-                locationError.textContent = "Seu navegador não suporta geolocalização.";
+                locationError.textContent = errorMessage;
+                
+                // Esconder loader
+                locationLoader.style.display = 'none';
+            },
+            // Opções com tempo de timeout mais longo
+            {
+                enableHighAccuracy: true,
+                timeout: 30000, // 30 segundos para conexões mais lentas
+                maximumAge: 10000
+            }
+        );
+    } else {
+        // Navegador não suporta geolocalização
+        locationDisplay.textContent = "Geolocalização não é suportada pelo seu navegador.";
+        locationDisplay.style.color = 'var(--error-color)';
+        locationLoader.style.display = 'none';
+        locationError.style.display = 'block';
+        locationError.textContent = "Seu navegador não suporta geolocalização.";
             }
         }
 
